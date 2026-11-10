@@ -45,6 +45,14 @@ MONGO_DNS_SERVERS=1.1.1.1,1.0.0.1
 Start the backend from the repository root with `npm --prefix Backend start`,
 or run `npm start` from `Backend`. The API starts only after MongoDB connects.
 
+### Deploying the backend on Render
+
+Create a **Web Service** with `Backend` as its Root Directory, `npm install` as
+the Build Command, and `npm start` as the Start Command. If the service is
+already configured to run `npm run build`, the backend now provides that script
+as a syntax check. Add the required backend environment variables in Render's
+Environment settings; do not upload the local `.env` file.
+
 ### Fixing an old `email_1` index
 
 If signup reports a duplicate key for `{ email: null }` on `test.users`, the
