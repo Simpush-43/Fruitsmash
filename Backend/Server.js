@@ -14,15 +14,30 @@ const connectDB = require('./Config/DbConnect');
 
 const app = express();
 const PORT = process.env.APP_PORT || 1000;
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = new Set([
+  'http://localhost:5173',
+  process.env.FRONTEND_URL?.trim().replace(/\/+$/, ''),
+].filter(Boolean));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors({ origin: true, credentials: true }));
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.has(origin)) return callback(null, true);
+    return callback(new Error('Origin is not allowed by CORS.'));
+  },
+  credentials: true,
+}));
+if (isProduction) app.set('trust proxy', 1);
 app.use(session({
   secret: process.env.CLIENT_SECRET || 'apple',
   resave: false,
   saveUninitialized: false,
-  cookie: { secure: false, sameSite: 'lax' },
+  cookie: {
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+  },
 }));
 
 app.use(passport.initialize());
@@ -37,8 +52,11 @@ app.use('/server', (req, res) => {
 });
 
 const startServer = async () => {
-  if (!process.env.ACCESS_SECRET || !process.env.REFRESH_SECRET) {
-    throw new Error("Set ACCESS_SECRET and REFRESH_SECRET in Backend/.env before starting the API.");
+  if (!process.env.ACCESS_SECRET || !process.env.REFRESH_SECRET || !process.env.CLIENT_SECRET) {
+    throw new Error("Set ACCESS_SECRET, REFRESH_SECRET, and CLIENT_SECRET in the backend environment before starting the API.");
+  }
+  if (isProduction && !process.env.FRONTEND_URL?.trim()) {
+    throw new Error("Set FRONTEND_URL to your deployed frontend origin in the production backend environment.");
   }
   await connectDB();
   app.listen(PORT, () => {

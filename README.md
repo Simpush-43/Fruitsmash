@@ -51,7 +51,21 @@ Create a **Web Service** with `Backend` as its Root Directory, `npm install` as
 the Build Command, and `npm start` as the Start Command. If the service is
 already configured to run `npm run build`, the backend now provides that script
 as a syntax check. Add the required backend environment variables in Render's
-Environment settings; do not upload the local `.env` file.
+Environment settings; do not upload the local `.env` file. Set `NODE_ENV` to
+`production`, `FRONTEND_URL` to the exact deployed Vercel origin (for example
+`https://your-app.vercel.app`, without a trailing slash), and set the MongoDB,
+JWT, session, and Cloudinary values from `Backend/.env.example`. The backend
+uses HTTPS-only cross-site cookies and only permits the configured frontend
+origin in production.
+
+### Deploying the frontend on Vercel
+
+Set the Vercel **Root Directory** to `Frontend`. Add `VITE_API_URL` with the
+value `https://fruitsmash.onrender.com/api` and add `VITE_GIPHY_API_KEY` in the
+Vercel project's Environment Variables for the environments you deploy.
+Environment variables are embedded at build time, so redeploy after changing
+them. Keep the GIPHY key in Vercel settings rather than committing a local
+`.env` file.
 
 ### Fixing an old `email_1` index
 

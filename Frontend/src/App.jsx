@@ -5,7 +5,7 @@ import './Createacoount.css'
 import './ProfilePAge.css'
 import Landingpage from './Pages/Landingpage'
 import Createacoount from './Pages/Createacoount'
-import ErrorBoundary from './ErrorBoundary'
+import ErrorBoundary from './Errorboundary'
 import ProfilePAge from './Pages/ProfilePAge'
 import ChatPage from './Pages/ChatPage'
 function App() {
