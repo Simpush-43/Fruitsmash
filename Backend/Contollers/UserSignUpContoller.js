@@ -118,17 +118,35 @@ exports.verifyReferralCode = async (req, res) => {
     return res.status(200).json({ success: false, message: "Better luck next time!" });
   }
 
+  if (!process.env.CLIENT_SECRET) {
+    console.error("Cannot grant private chat access because CLIENT_SECRET is not configured.");
+    return res.status(503).json({ success: false, message: "Private chat access is not configured on the server." });
+  }
+
+  const privateChatToken = jwt.sign({ scope: "private-chat" }, process.env.CLIENT_SECRET, { expiresIn: "12h" });
   req.session.privateChatUnlocked = true;
   req.session.save((error) => {
     if (error) {
-      console.error("Could not save private session", error);
-      return res.status(500).json({ success: false, message: "Better luck next time!" });
+      console.error("Could not save private session:", error);
     }
-    return res.status(200).json({ success: true, message: "Access granted" });
+    return res.status(200).json({ success: true, message: "Access granted", privateChatToken });
   });
 };
 
 exports.getPrivateChatStatus = async (req, res) => {
+  const token = req.get("X-Private-Chat-Token");
+  if (token && process.env.CLIENT_SECRET) {
+    try {
+      const grant = jwt.verify(token, process.env.CLIENT_SECRET);
+      if (grant.scope === "private-chat") {
+        return res.status(200).json({ unlocked: true });
+      }
+    } catch (error) {
+      if (error.name !== "TokenExpiredError" && error.name !== "JsonWebTokenError") {
+        console.error("Could not validate private chat access:", error);
+      }
+    }
+  }
   return res.status(200).json({ unlocked: Boolean(req.session?.privateChatUnlocked) });
 };
 

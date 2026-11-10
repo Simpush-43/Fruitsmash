@@ -3,6 +3,11 @@ import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:1000/api";
 
+const getPrivateChatHeaders = () => {
+  const token = sessionStorage.getItem("privateChatToken");
+  return token ? { "X-Private-Chat-Token": token } : {};
+};
+
 const searchGiphyMedia = async (mediaType, query) => {
   const apiKey = import.meta.env.VITE_GIPHY_API_KEY?.trim();
   if (!apiKey) {
@@ -83,6 +88,7 @@ const UseAuthStore = create((set) => ({
       sessionStorage.removeItem("accessToken");
       sessionStorage.removeItem("refreshToken");
       sessionStorage.removeItem("privateChatUnlocked");
+      sessionStorage.removeItem("privateChatToken");
       return { success: true };
     } catch (error) {
       set({ error: error?.response?.data?.message || "logout failed", loading: false });
@@ -220,7 +226,10 @@ const UseAuthStore = create((set) => ({
     const token = sessionStorage.getItem("accessToken");
     const res = await axios.get(`${BASE_URL}/chat/messages/${encodeURIComponent(contactId)}`, {
       params: before ? { before } : undefined,
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      headers: {
+        ...getPrivateChatHeaders(),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       withCredentials: true,
     });
     return res.data;
@@ -229,7 +238,10 @@ const UseAuthStore = create((set) => ({
   fetchChatConversations: async () => {
     const token = sessionStorage.getItem("accessToken");
     const res = await axios.get(`${BASE_URL}/chat/messages/conversations`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      headers: {
+        ...getPrivateChatHeaders(),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       withCredentials: true,
     });
     return res.data.conversations;
@@ -238,7 +250,10 @@ const UseAuthStore = create((set) => ({
   sendChatMessage: async (message) => {
     const token = sessionStorage.getItem("accessToken");
     const res = await axios.post(`${BASE_URL}/chat/messages`, message, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      headers: {
+        ...getPrivateChatHeaders(),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       withCredentials: true,
     });
     return res.data.message;
@@ -251,7 +266,10 @@ const UseAuthStore = create((set) => ({
     formData.append("recipientId", recipientId);
     if (Number.isFinite(duration)) formData.append("duration", String(duration));
     const res = await axios.post(`${BASE_URL}/chat/messages/upload`, formData, {
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      headers: {
+        ...getPrivateChatHeaders(),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       withCredentials: true,
     });
     return res.data.message;
@@ -262,7 +280,10 @@ const UseAuthStore = create((set) => ({
     const token = sessionStorage.getItem("accessToken");
     const res = await axios.get(`${BASE_URL}/chat/presence`, {
       params: { userIds: userIds.join(",") },
-      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      headers: {
+        ...getPrivateChatHeaders(),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
       withCredentials: true,
     });
     return res.data.presence;
@@ -274,7 +295,10 @@ const UseAuthStore = create((set) => ({
       `${BASE_URL}/chat/presence/${offline ? "offline" : "heartbeat"}`,
       { typingTo },
       {
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+        headers: {
+          ...getPrivateChatHeaders(),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
         withCredentials: true,
       }
     );
@@ -291,27 +315,36 @@ const UseAuthStore = create((set) => ({
         { code },
         { withCredentials: true }
       );
-      if (res.data?.success) {
+      if (res.data?.success && res.data.privateChatToken) {
+        sessionStorage.setItem("privateChatToken", res.data.privateChatToken);
         sessionStorage.setItem("privateChatUnlocked", "true");
       }
       return res.data;
     } catch (error) {
-      return { success: false, message: "Better luck next time!" };
+      return {
+        success: false,
+        message: error.response?.data?.message || "Could not verify the code. Check your connection and try again.",
+      };
     }
   },
 
   checkPrivateChatAccess: async () => {
     try {
-      const res = await axios.get(`${BASE_URL}/private-chat-status`, { withCredentials: true });
+      const res = await axios.get(`${BASE_URL}/private-chat-status`, {
+        headers: getPrivateChatHeaders(),
+        withCredentials: true,
+      });
       const unlocked = Boolean(res.data?.unlocked);
       if (unlocked) {
         sessionStorage.setItem("privateChatUnlocked", "true");
       } else {
         sessionStorage.removeItem("privateChatUnlocked");
+        sessionStorage.removeItem("privateChatToken");
       }
       return { unlocked };
     } catch (error) {
       sessionStorage.removeItem("privateChatUnlocked");
+      sessionStorage.removeItem("privateChatToken");
       return { unlocked: false };
     }
   },

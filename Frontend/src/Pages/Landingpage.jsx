@@ -338,21 +338,26 @@ const Landingpage = () => {
     event.preventDefault();
     if (isVerifying) return;
     setIsVerifying(true);
-    const result = await verifyReferralCode(referralCode);
-    setIsVerifying(false);
+    try {
+      const result = await verifyReferralCode(referralCode);
+      if (result?.success) {
+        stopMusic();
+        setFeedback("");
+        setReferralCode("");
+        setReferralOpen(false);
+        navigate("/home/send");
+        return;
+      }
 
-    if (result?.success) {
-      stopMusic();
-      setFeedback("");
+      setFeedback(result?.message || "Better luck next time!");
+      if (!musicEnabledRef.current) startMusic();
       setReferralCode("");
-      setReferralOpen(false);
-      navigate("/home/send");
-      return;
+    } catch (error) {
+      console.error("Could not redeem private chat code:", error);
+      setFeedback("Could not verify the code. Check your connection and try again.");
+    } finally {
+      setIsVerifying(false);
     }
-
-    setFeedback("Better luck next time!");
-    if (!musicEnabledRef.current) startMusic();
-    setReferralCode("");
   };
 
   const handlePointerDown = (event) => {

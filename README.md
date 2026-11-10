@@ -56,7 +56,10 @@ Environment settings; do not upload the local `.env` file. Set `NODE_ENV` to
 `https://your-app.vercel.app`, without a trailing slash), and set the MongoDB,
 JWT, session, and Cloudinary values from `Backend/.env.example`. The backend
 uses HTTPS-only cross-site cookies and only permits the configured frontend
-origin in production.
+origin in production. Redeeming a referral code also returns a signed,
+12-hour private-chat access token so browsers that block cross-site cookies
+can still open the chat. Redeploy the backend and frontend after pulling this
+change.
 
 ### Deploying the frontend on Vercel
 

@@ -25,10 +25,21 @@ const verifyToken = (req, res, next) => {
 };
 
 const requirePrivateChat = (req, res, next) => {
-  if (!req.session?.privateChatUnlocked) {
-    return res.status(403).json({ message: "Enter the referral code to access private chat." });
+  if (req.session?.privateChatUnlocked) return next();
+
+  const privateChatToken = req.get("X-Private-Chat-Token");
+  if (privateChatToken) {
+    try {
+      const grant = jwt.verify(privateChatToken, process.env.CLIENT_SECRET);
+      if (grant.scope === "private-chat") return next();
+    } catch (error) {
+      if (error.name !== "TokenExpiredError" && error.name !== "JsonWebTokenError") {
+        console.error("Could not validate private chat access:", error);
+      }
+    }
   }
-  return next();
+
+  return res.status(403).json({ message: "Enter the referral code to access private chat." });
 };
 
 route.use(verifyToken, requirePrivateChat);

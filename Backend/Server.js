@@ -27,6 +27,7 @@ app.use(cors({
     if (!origin || allowedOrigins.has(origin)) return callback(null, true);
     return callback(new Error('Origin is not allowed by CORS.'));
   },
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Private-Chat-Token'],
   credentials: true,
 }));
 if (isProduction) app.set('trust proxy', 1);
