@@ -407,7 +407,7 @@ const Landingpage = () => {
       <header className="fruit-topbar">
         <button className="fruit-brand" onClick={() => navigate("/")} aria-label="PhotoSafe home">
           <img src={LogoApp} alt="" />
-          <span>PhotoSafe</span>
+          <span>FruitSlice</span>
         </button>
         <div className="fruit-top-actions">
           <div className="fruit-score-chip" aria-label={`Score ${score}`}>
@@ -430,11 +430,6 @@ const Landingpage = () => {
 
       <main className="fruit-main">
         <section className="fruit-intro">
-          <div>
-            <p className="fruit-eyebrow">THE PHOTO SAFE ARCADE</p>
-            <h1>Slice fruit. <span>Have a little fun.</span></h1>
-            <p className="fruit-subtitle">Swipe through the fruit before it falls. How high can you score?</p>
-          </div>
           <div className="fruit-lives" aria-label={`${lives} lives remaining`}>
             <span className="lives-label">LIVES</span>
             {[0, 1, 2, 3, 4].map((life) => (
