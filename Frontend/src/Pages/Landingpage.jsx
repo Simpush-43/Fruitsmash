@@ -502,9 +502,9 @@ const Landingpage = () => {
 
         <section className="fruit-benefits" aria-label="PhotoSafe features">
           {[
-            "Know who viewed your image",
-            "See when it was viewed",
-            "Share images with more control",
+            "slice and get points",
+            "See your scores",
+            "play muisc get fun",
           ].map((text) => (
             <div className="fruit-benefit" key={text}>
               <CheckCircleIcon className="benefit-check" />
